@@ -1,0 +1,1708 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Live Water Distortion Lab</title>
+
+  <style>
+    :root {
+      --bg: #030303;
+      --panel: #0b0b0b;
+      --panel-strong: #151313;
+      --panel-pressed: #1d1817;
+      --text: #f4f1ef;
+      --muted: #a79e9a;
+      --accent: #ff8f7a;
+      --accent-strong: #ff725f;
+      --accent-dark: #7c3028;
+      --accent-soft: rgba(255, 143, 122, 0.12);
+      --button-text: #160907;
+      --border: #3a3432;
+      --border-bright: #6f625e;
+      --shadow: 8px 8px 0 rgba(0,0,0,0.86);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background:
+        linear-gradient(rgba(255,255,255,0.018) 50%, rgba(0,0,0,0.08) 50%) 0 0 / 100% 4px,
+        radial-gradient(circle at 16% 18%, rgba(255, 143, 122, 0.075), transparent 30%),
+        linear-gradient(135deg, #050505 0%, #0a0909 58%, #010101 100%);
+      color: var(--text);
+      font-family: "Courier New", Courier, ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      overflow: hidden;
+    }
+
+    .app {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 348px;
+      height: 100vh;
+      padding: 18px;
+      gap: 18px;
+    }
+
+    aside {
+      grid-column: 2;
+      grid-row: 1;
+      background: var(--panel);
+      border: 2px solid var(--border-bright);
+      border-radius: 0;
+      padding: 14px;
+      box-shadow: var(--shadow);
+      overflow-y: auto;
+      scrollbar-color: var(--accent-dark) #080808;
+    }
+
+    main {
+      grid-column: 1;
+      grid-row: 1;
+      position: relative;
+      display: grid;
+      place-items: center;
+      background:
+        linear-gradient(rgba(255,255,255,0.014) 50%, rgba(0,0,0,0.05) 50%) 0 0 / 100% 4px,
+        #070707;
+      border: 2px solid var(--border-bright);
+      border-radius: 0;
+      overflow: hidden;
+      box-shadow: var(--shadow);
+    }
+
+    h1 {
+      font-size: 19px;
+      margin: 0 0 8px;
+      letter-spacing: 0.02em;
+      color: var(--accent);
+      text-transform: uppercase;
+      text-shadow: none;
+    }
+
+    .subtitle {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.45;
+      margin-bottom: 16px;
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      padding: 10px 0;
+    }
+
+    .dropzone {
+      border: 2px dashed var(--border-bright);
+      background: #111;
+      border-radius: 0;
+      padding: 16px;
+      text-align: center;
+      cursor: pointer;
+      margin-bottom: 14px;
+      transition: 0.12s linear;
+    }
+
+    .dropzone:hover,
+    .dropzone.dragover {
+      border-color: var(--accent);
+      background: var(--accent-soft);
+    }
+
+    .dropzone strong {
+      display: block;
+      margin-bottom: 4px;
+      font-size: 13px;
+      text-transform: uppercase;
+      color: var(--text);
+    }
+
+    .dropzone span {
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    input[type="file"] {
+      display: none;
+    }
+
+    .section {
+      background: #0f0f0f;
+      border: 2px solid var(--border);
+      border-radius: 0;
+      padding: 12px;
+      margin-bottom: 12px;
+      box-shadow: inset 0 0 0 1px #050505;
+    }
+
+    .section-title {
+      font-size: 11px;
+      color: var(--accent);
+      text-transform: uppercase;
+      letter-spacing: 0.16em;
+      margin: -12px -12px 12px;
+      padding: 8px 10px;
+      background: #151313;
+      border-bottom: 2px solid var(--border);
+    }
+
+    .conditional-section {
+      display: none;
+    }
+
+    .conditional-section.is-visible {
+      display: block;
+    }
+
+    label {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 10px;
+      align-items: center;
+      font-size: 12px;
+      margin: 12px 0 6px;
+      text-transform: uppercase;
+    }
+
+    label output {
+      color: var(--accent);
+      font-variant-numeric: tabular-nums;
+    }
+
+    input[type="range"] {
+      width: 100%;
+      accent-color: var(--accent);
+    }
+
+    select, button, input[type="number"] {
+      width: 100%;
+      border: 2px solid var(--border-bright);
+      background: var(--panel-strong);
+      color: var(--text);
+      border-radius: 0;
+      padding: 10px 11px;
+      font: inherit;
+      box-shadow: none;
+    }
+
+    select {
+      cursor: pointer;
+    }
+
+    select:focus, input[type="number"]:focus, button:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
+
+    input[type="number"] {
+      appearance: textfield;
+    }
+
+    input[type="number"]::-webkit-outer-spin-button,
+    input[type="number"]::-webkit-inner-spin-button {
+      appearance: none;
+      margin: 0;
+    }
+
+    button {
+      cursor: pointer;
+      color: var(--button-text);
+      background: var(--accent);
+      border-color: #ffc0b4 #7f3b32 #7f3b32 #ffc0b4;
+      font-weight: 700;
+      text-transform: uppercase;
+      transition: transform 0.08s linear, background 0.08s linear;
+    }
+
+    button:hover {
+      transform: translate(-1px, -1px);
+      background: #ffa08f;
+      box-shadow: none;
+      filter: none;
+    }
+
+    button:active {
+      transform: translate(1px, 1px);
+      background: var(--accent-strong);
+      border-color: #7f3b32 #ffc0b4 #ffc0b4 #7f3b32;
+    }
+
+    button:disabled {
+      cursor: wait;
+      opacity: 0.62;
+      filter: none;
+      transform: none;
+      background: #8b746f;
+    }
+
+    .button-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .resolution-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 8px;
+    }
+
+    .mini-label {
+      color: var(--muted);
+      font-size: 11px;
+      margin: 8px 0 5px;
+      text-transform: uppercase;
+    }
+
+    canvas {
+      max-width: 100%;
+      max-height: 100%;
+      width: auto;
+      height: auto;
+      display: block;
+      image-rendering: auto;
+    }
+
+    .hud {
+      position: absolute;
+      left: 18px;
+      bottom: 18px;
+      background: #090909;
+      border: 2px solid var(--border-bright);
+      color: var(--accent);
+      border-radius: 0;
+      padding: 9px 11px;
+      font-size: 11px;
+      pointer-events: none;
+      box-shadow: 4px 4px 0 rgba(0,0,0,0.75);
+    }
+
+    @media (max-width: 900px) {
+      body {
+        overflow: auto;
+      }
+
+      .app {
+        grid-template-columns: 1fr;
+        height: auto;
+      }
+
+      aside,
+      main {
+        grid-column: 1;
+      }
+
+      aside {
+        grid-row: 2;
+      }
+
+      main {
+        grid-row: 1;
+        min-height: 55vh;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="app">
+    <aside>
+      <h1>Water Distortion Lab</h1>
+      <div class="subtitle">
+        Upload an image, then distort it with animated 2D motion fields: ripples, vortices, turbulence, diagonal drift, liquid glass, and refraction.
+      </div>
+
+      <label class="dropzone" id="dropzone">
+        <input type="file" id="upload" accept="image/*" />
+        <strong>Drop image here</strong>
+        <span>or click to upload</span>
+      </label>
+
+      <div class="section">
+        <div class="section-title">Motion</div>
+
+        <label>
+          Mode
+        </label>
+        <select id="mode">
+          <option value="water">Water reflection</option>
+          <option value="turbulence">Turbulence</option>
+          <option value="vortex">Vortex swirl</option>
+          <option value="diagonal">Diagonal drift</option>
+          <option value="liquid">Liquid glass</option>
+          <option value="rings">Expanding rings</option>
+          <option value="chaos">Chaotic flow</option>
+          <option value="abstractRiver">Abstract pixel river</option>
+        </select>
+
+        <label>
+          Wave function
+        </label>
+        <select id="waveFunction">
+          <option value="sine">Sine / smooth waves</option>
+          <option value="triangle">Triangle / prismatic folds</option>
+          <option value="saw">Sawtooth / hard current</option>
+          <option value="square">Square / stepped ripples</option>
+          <option value="noise">Noise-blended waves</option>
+        </select>
+
+        <label>
+          Strength <output id="strengthOut"></output>
+        </label>
+        <input id="strength" type="range" min="0" max="0.15" step="0.001" value="0.035" />
+
+        <label>
+          Speed <output id="speedOut"></output>
+        </label>
+        <input id="speed" type="range" min="0" max="5" step="0.01" value="1.2" />
+
+        <label>
+          Scale <output id="scaleOut"></output>
+        </label>
+        <input id="scale" type="range" min="1" max="80" step="0.5" value="24" />
+
+        <label>
+          Complexity <output id="complexityOut"></output>
+        </label>
+        <input id="complexity" type="range" min="0" max="1" step="0.01" value="0.55" />
+      </div>
+
+      <div class="section conditional-section" id="abstractRiverSection">
+        <div class="section-title">Abstract Pixel River</div>
+
+        <label>
+          Pixel size <output id="pixelSizeOut"></output>
+        </label>
+        <input id="pixelSize" type="range" min="1" max="80" step="1" value="18" />
+
+        <label>
+          River angle <output id="riverAngleOut"></output>
+        </label>
+        <input id="riverAngle" type="range" min="-180" max="180" step="1" value="-18" />
+
+        <label>
+          River bands <output id="riverBandsOut"></output>
+        </label>
+        <input id="riverBands" type="range" min="1" max="60" step="1" value="24" />
+
+        <label>
+          Band sharpness <output id="riverSharpnessOut"></output>
+        </label>
+        <input id="riverSharpness" type="range" min="0" max="1" step="0.01" value="0.65" />
+
+        <label>
+          Pixel drift <output id="pixelDriftOut"></output>
+        </label>
+        <input id="pixelDrift" type="range" min="0" max="1" step="0.01" value="0.75" />
+
+        <label>
+          Channel split <output id="channelSplitOut"></output>
+        </label>
+        <input id="channelSplit" type="range" min="0" max="0.03" step="0.001" value="0.006" />
+      </div>
+
+      <div class="section">
+        <div class="section-title">Effect Mixing</div>
+
+        <label>
+          Secondary mode
+        </label>
+        <select id="secondaryMode">
+          <option value="none">None</option>
+          <option value="water">Water reflection</option>
+          <option value="turbulence">Turbulence</option>
+          <option value="vortex">Vortex swirl</option>
+          <option value="diagonal">Diagonal drift</option>
+          <option value="liquid">Liquid glass</option>
+          <option value="rings">Expanding rings</option>
+          <option value="chaos">Chaotic flow</option>
+          <option value="abstractRiver">Abstract pixel river</option>
+        </select>
+
+        <label>
+          Mix amount <output id="effectMixOut"></output>
+        </label>
+        <input id="effectMix" type="range" min="0" max="1" step="0.01" value="0" />
+
+        <label>
+          Region pattern
+        </label>
+        <select id="regionPattern">
+          <option value="full">Full image blend</option>
+          <option value="horizontal">Horizontal bands</option>
+          <option value="vertical">Vertical bands</option>
+          <option value="patches">Soft patches</option>
+          <option value="radial">Radial pool</option>
+        </select>
+
+        <label>
+          Region variation <output id="regionVariationOut"></output>
+        </label>
+        <input id="regionVariation" type="range" min="0" max="1" step="0.01" value="0.35" />
+
+        <label>
+          Secondary scale <output id="secondaryScaleOut"></output>
+        </label>
+        <input id="secondaryScale" type="range" min="1" max="100" step="0.5" value="36" />
+
+        <label>
+          Secondary speed <output id="secondarySpeedOut"></output>
+        </label>
+        <input id="secondarySpeed" type="range" min="0" max="5" step="0.01" value="1.6" />
+      </div>
+
+      <div class="section">
+        <div class="section-title">Refraction</div>
+
+        <label>
+          Refraction <output id="refractionOut"></output>
+        </label>
+        <input id="refraction" type="range" min="0" max="0.12" step="0.001" value="0.018" />
+
+        <label>
+          Refraction scale <output id="refractionScaleOut"></output>
+        </label>
+        <input id="refractionScale" type="range" min="2" max="80" step="0.5" value="18" />
+
+        <label>
+          Glass chroma <output id="glassChromaOut"></output>
+        </label>
+        <input id="glassChroma" type="range" min="0" max="0.04" step="0.001" value="0.004" />
+      </div>
+
+      <div class="section">
+        <div class="section-title">Image Response</div>
+
+        <label>
+          Vertical smear <output id="smearOut"></output>
+        </label>
+        <input id="smear" type="range" min="0" max="0.04" step="0.001" value="0.008" />
+
+        <label>
+          Shimmer <output id="shimmerOut"></output>
+        </label>
+        <input id="shimmer" type="range" min="0" max="0.08" step="0.001" value="0.015" />
+      </div>
+
+      <div class="section">
+        <div class="section-title">Presets</div>
+        <select id="preset">
+          <option value="">Choose preset</option>
+          <option value="harbor">Harbor reflection</option>
+          <option value="storm">Stormy surface</option>
+          <option value="glass">Liquid glass</option>
+          <option value="jar">Glass jar refraction</option>
+          <option value="spiral">Slow vortex</option>
+          <option value="abstract">Abstract pixel river</option>
+        </select>
+
+        <div class="button-row">
+          <button id="pauseBtn">Pause</button>
+          <button id="resetBtn">Reset</button>
+        </div>
+
+      </div>
+
+      <div class="section">
+        <div class="section-title">Export</div>
+
+        <label>
+          Video seconds <output id="videoDurationOut"></output>
+        </label>
+        <input id="videoDuration" type="range" min="1" max="20" step="1" value="5" />
+
+        <label>
+          Video FPS <output id="videoFpsOut"></output>
+        </label>
+        <input id="videoFps" type="range" min="12" max="60" step="1" value="24" />
+
+        <label>
+          Export scale <output id="exportScaleOut"></output>
+        </label>
+        <input id="exportScale" type="range" min="10" max="200" step="5" value="100" />
+
+        <div class="resolution-row">
+          <div>
+            <div class="mini-label">Output width</div>
+            <input id="exportWidth" type="number" min="1" step="1" value="900" />
+          </div>
+          <div>
+            <div class="mini-label">Output height</div>
+            <input id="exportHeight" type="number" min="1" step="1" value="600" />
+          </div>
+        </div>
+
+        <div class="button-row">
+          <button id="exportFullPngBtn">PNG</button>
+          <button id="exportVideoBtn">Video</button>
+        </div>
+
+        <div class="subtitle" id="exportStatus" style="margin:10px 0 0;">PNG and frame-by-frame MJPEG AVI video export at your chosen output resolution. Video uses the same settings as the preview.</div>
+      </div>
+    </aside>
+
+    <main>
+      <canvas id="glcanvas"></canvas>
+      <div class="hud" id="hud">Upload an image to begin</div>
+    </main>
+  </div>
+
+  <script>
+    const canvas = document.getElementById("glcanvas");
+    const gl = canvas.getContext("webgl", { preserveDrawingBuffer: true });
+
+    if (!gl) {
+      alert("WebGL is not supported in this browser.");
+    }
+
+    const controls = {
+      mode: document.getElementById("mode"),
+      waveFunction: document.getElementById("waveFunction"),
+      secondaryMode: document.getElementById("secondaryMode"),
+      regionPattern: document.getElementById("regionPattern"),
+      effectMix: document.getElementById("effectMix"),
+      regionVariation: document.getElementById("regionVariation"),
+      secondaryScale: document.getElementById("secondaryScale"),
+      secondarySpeed: document.getElementById("secondarySpeed"),
+      strength: document.getElementById("strength"),
+      speed: document.getElementById("speed"),
+      scale: document.getElementById("scale"),
+      complexity: document.getElementById("complexity"),
+      smear: document.getElementById("smear"),
+      shimmer: document.getElementById("shimmer"),
+      refraction: document.getElementById("refraction"),
+      refractionScale: document.getElementById("refractionScale"),
+      glassChroma: document.getElementById("glassChroma"),
+      pixelSize: document.getElementById("pixelSize"),
+      riverAngle: document.getElementById("riverAngle"),
+      riverBands: document.getElementById("riverBands"),
+      riverSharpness: document.getElementById("riverSharpness"),
+      pixelDrift: document.getElementById("pixelDrift"),
+      channelSplit: document.getElementById("channelSplit"),
+      videoDuration: document.getElementById("videoDuration"),
+      videoFps: document.getElementById("videoFps"),
+      exportScale: document.getElementById("exportScale"),
+      exportWidth: document.getElementById("exportWidth"),
+      exportHeight: document.getElementById("exportHeight")
+    };
+
+    const outputs = {
+      strength: document.getElementById("strengthOut"),
+      speed: document.getElementById("speedOut"),
+      scale: document.getElementById("scaleOut"),
+      complexity: document.getElementById("complexityOut"),
+      smear: document.getElementById("smearOut"),
+      shimmer: document.getElementById("shimmerOut"),
+      videoDuration: document.getElementById("videoDurationOut"),
+      videoFps: document.getElementById("videoFpsOut"),
+      exportScale: document.getElementById("exportScaleOut"),
+      effectMix: document.getElementById("effectMixOut"),
+      regionVariation: document.getElementById("regionVariationOut"),
+      secondaryScale: document.getElementById("secondaryScaleOut"),
+      secondarySpeed: document.getElementById("secondarySpeedOut"),
+      refraction: document.getElementById("refractionOut"),
+      refractionScale: document.getElementById("refractionScaleOut"),
+      glassChroma: document.getElementById("glassChromaOut"),
+      pixelSize: document.getElementById("pixelSizeOut"),
+      riverAngle: document.getElementById("riverAngleOut"),
+      riverBands: document.getElementById("riverBandsOut"),
+      riverSharpness: document.getElementById("riverSharpnessOut"),
+      pixelDrift: document.getElementById("pixelDriftOut"),
+      channelSplit: document.getElementById("channelSplitOut")
+    };
+
+    const vertexShaderSource = `
+      attribute vec2 a_position;
+      varying vec2 v_uv;
+
+      void main() {
+        v_uv = a_position * 0.5 + 0.5;
+        gl_Position = vec4(a_position, 0.0, 1.0);
+      }
+    `;
+
+    const fragmentShaderSource = `
+      precision highp float;
+
+      uniform sampler2D u_image;
+      uniform float u_time;
+      uniform float u_strength;
+      uniform float u_speed;
+      uniform float u_scale;
+      uniform float u_complexity;
+      uniform float u_smear;
+      uniform float u_shimmer;
+      uniform float u_refraction;
+      uniform float u_refraction_scale;
+      uniform float u_glass_chroma;
+      uniform float u_pixel_size;
+      uniform float u_river_angle;
+      uniform float u_river_bands;
+      uniform float u_river_sharpness;
+      uniform float u_pixel_drift;
+      uniform float u_channel_split;
+      uniform int u_mode;
+      uniform int u_secondary_mode;
+      uniform int u_wave_function;
+      uniform int u_region_pattern;
+      uniform float u_effect_mix;
+      uniform float u_region_variation;
+      uniform float u_secondary_scale;
+      uniform float u_secondary_speed;
+      uniform vec2 u_resolution;
+
+      varying vec2 v_uv;
+
+      float hash(vec2 p) {
+        return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123);
+      }
+
+      float noise(vec2 p) {
+        vec2 i = floor(p);
+        vec2 f = fract(p);
+        float a = hash(i);
+        float b = hash(i + vec2(1.0, 0.0));
+        float c = hash(i + vec2(0.0, 1.0));
+        float d = hash(i + vec2(1.0, 1.0));
+        vec2 u = f * f * (3.0 - 2.0 * f);
+        return mix(a, b, u.x)
+             + (c - a) * u.y * (1.0 - u.x)
+             + (d - b) * u.x * u.y;
+      }
+
+      float fbm(vec2 p) {
+        float value = 0.0;
+        float amp = 0.5;
+        for (int i = 0; i < 5; i++) {
+          value += amp * noise(p);
+          p *= 2.0;
+          amp *= 0.5;
+        }
+        return value;
+      }
+
+      vec2 rotate(vec2 p, float a) {
+        float s = sin(a);
+        float c = cos(a);
+        return mat2(c, -s, s, c) * p;
+      }
+
+      float waveFn(float x) {
+        if (u_wave_function == 1) {
+          return abs(fract(x / 6.2831853 + 0.25) * 4.0 - 2.0) - 1.0;
+        }
+
+        if (u_wave_function == 2) {
+          return fract(x / 6.2831853 + 0.5) * 2.0 - 1.0;
+        }
+
+        if (u_wave_function == 3) {
+          return sin(x) >= 0.0 ? 1.0 : -1.0;
+        }
+
+        if (u_wave_function == 4) {
+          return mix(sin(x), sin(x * 0.53 + 1.7) * 0.65 + sin(x * 1.91) * 0.35, 0.55);
+        }
+
+        return sin(x);
+      }
+
+      float waveCos(float x) {
+        return waveFn(x + 1.5707963);
+      }
+
+      float refractionHeight(vec2 uv, float t) {
+        vec2 p = uv * max(u_refraction_scale, 1.0);
+        float large = fbm(p * 0.22 + vec2(t * 0.12, -t * 0.08));
+        float medium = fbm(rotate(p * 0.38, 0.9) + vec2(-t * 0.16, t * 0.11));
+        float waveA = waveFn((uv.x * 1.7 + uv.y * 0.45) * u_refraction_scale * 2.1 + t * 1.8);
+        float waveB = waveCos((uv.y * 1.9 - uv.x * 0.35) * u_refraction_scale * 1.55 - t * 1.35);
+        return large * 0.45 + medium * 0.35 + waveA * 0.12 + waveB * 0.08;
+      }
+
+      vec2 refractionNormalOffset(vec2 uv, float t) {
+        if (u_refraction <= 0.0001) return vec2(0.0);
+        vec2 texel = 1.0 / max(u_resolution, vec2(1.0));
+        float e = max(1.5, u_refraction_scale * 0.05);
+        vec2 dx = vec2(texel.x * e, 0.0);
+        vec2 dy = vec2(0.0, texel.y * e);
+        float hL = refractionHeight(uv - dx, t);
+        float hR = refractionHeight(uv + dx, t);
+        float hD = refractionHeight(uv - dy, t);
+        float hU = refractionHeight(uv + dy, t);
+        vec2 normal = vec2(hL - hR, hD - hU);
+
+        // Jar-like bulged glass: subtle lensing that bends the image toward/away from soft blobs.
+        float lens = fbm(uv * max(u_refraction_scale, 1.0) * 0.12 + vec2(t * 0.05, -t * 0.04));
+        vec2 centered = uv - 0.5;
+        normal += centered * (lens - 0.5) * 0.55;
+        return normal * u_refraction;
+      }
+
+      vec2 abstractRiverSampleUv(vec2 uv, float t) {
+        vec2 texel = 1.0 / max(u_resolution, vec2(1.0));
+        float block = max(u_pixel_size, 1.0);
+        vec2 grid = texel * block;
+        vec2 pixelUv = (floor(uv / grid) + 0.5) * grid;
+
+        float angle = radians(u_river_angle);
+        vec2 q = rotate(pixelUv - 0.5, angle);
+        float bands = max(u_river_bands, 1.0);
+        float river = waveFn((q.y * bands + fbm(q * 7.0 + t * 0.18) * 2.0) * 6.2831853 + t * 1.4);
+        float mask = mix(river, sign(river), u_river_sharpness);
+
+        vec2 streamDir = rotate(vec2(1.0, 0.0), angle);
+        vec2 crossDir = vec2(-streamDir.y, streamDir.x);
+        float blockNoise = fbm(floor(pixelUv / grid) * 0.37 + vec2(t * 0.18, -t * 0.11));
+        float pulse = waveFn(q.x * bands * 2.2 - t * 3.0 + blockNoise * 6.0);
+
+        vec2 drift = streamDir * (mask * 0.75 + blockNoise - 0.5);
+        drift += crossDir * pulse * 0.35;
+        return clamp(mix(uv, pixelUv, u_pixel_drift) + drift * u_strength * 1.6, 0.001, 0.999);
+      }
+
+      vec2 flowFieldForMode(vec2 uv, float t, int mode, float scaleValue, float complexityValue) {
+        vec2 centered = uv - 0.5;
+        vec2 p = uv * scaleValue;
+        vec2 d = vec2(0.0);
+
+        if (mode == 0) {
+          // Water reflection: mostly horizontal, but not only vertical waves.
+          float a = waveFn(uv.y * scaleValue * 2.0 + t * 2.0);
+          float b = waveFn((uv.x + uv.y) * scaleValue * 1.4 - t * 1.6);
+          float c = fbm(vec2(uv.y * 8.0, uv.x * 2.0 + t * 0.4));
+          d = vec2(a * 0.8 + b * 0.25 + (c - 0.5), b * 0.18);
+        }
+
+        else if (mode == 1) {
+          // Turbulence: fully 2D noisy motion.
+          float nx = fbm(p * 0.22 + vec2(t * 0.28, -t * 0.12));
+          float ny = fbm(p * 0.22 + vec2(-t * 0.17, t * 0.31) + 9.2);
+          d = vec2(nx - 0.5, ny - 0.5) * 2.0;
+        }
+
+        else if (mode == 2) {
+          // Vortex swirl.
+          float r = length(centered);
+          float angle = atan(centered.y, centered.x);
+          float swirl = waveFn(r * scaleValue * 2.0 - t * 2.0);
+          vec2 tangent = vec2(-centered.y, centered.x) / max(r, 0.001);
+          vec2 radial = centered / max(r, 0.001);
+          d = tangent * swirl * smoothstep(0.55, 0.0, r);
+          d += radial * waveFn(angle * 5.0 + t) * 0.25;
+        }
+
+        else if (mode == 3) {
+          // Diagonal drift.
+          float n = fbm(p * 0.18 + vec2(t * 0.2, t * 0.15));
+          float stripe = waveFn((uv.x + uv.y) * scaleValue * 2.5 + t * 2.0);
+          d = normalize(vec2(1.0, -0.7)) * (stripe * 0.7 + n - 0.5);
+          d += vec2(n - 0.5, fbm(p * 0.1 - t * 0.1) - 0.5) * 0.45;
+        }
+
+        else if (mode == 4) {
+          // Liquid glass: smooth blobby refraction.
+          float nx = fbm(rotate(p * 0.16, 0.6) + vec2(t * 0.17, 0.0));
+          float ny = fbm(rotate(p * 0.16, -0.8) + vec2(0.0, -t * 0.14) + 4.0);
+          d = vec2(nx - 0.5, ny - 0.5);
+          d += vec2(
+            waveFn(uv.y * scaleValue + t),
+            waveCos(uv.x * scaleValue * 0.8 - t)
+          ) * 0.22;
+        }
+
+        else if (mode == 5) {
+          // Expanding rings.
+          float r = length(centered);
+          float ring = waveFn(r * scaleValue * 5.0 - t * 4.0);
+          vec2 radial = centered / max(r, 0.001);
+          vec2 tangent = vec2(-radial.y, radial.x);
+          d = radial * ring;
+          d += tangent * waveFn(r * scaleValue * 2.0 + t) * 0.25;
+        }
+
+        else if (mode == 6) {
+          // Chaotic flow: layered waves and noise in all directions.
+          float a = waveFn((uv.x * 1.7 + uv.y * 0.8) * scaleValue + t * 2.0);
+          float b = waveCos((uv.x * -0.6 + uv.y * 1.9) * scaleValue - t * 2.6);
+          float nx = fbm(p * 0.2 + vec2(t * 0.25, b));
+          float ny = fbm(p * 0.2 + vec2(a, -t * 0.2));
+          d = vec2(a + nx - 0.5, b + ny - 0.5);
+        }
+
+        else if (mode == 7) {
+          // Abstract pixel river: chunky, quantized stream bands.
+          float angle = radians(u_river_angle);
+          vec2 q = rotate(uv - 0.5, angle);
+          float bands = max(u_river_bands, 1.0);
+          float stripe = waveFn((q.y * bands + fbm(q * 8.0 + t * 0.22) * 1.6) * 6.2831853 + t * 1.6);
+          float blocks = fbm(floor(uv * u_resolution / max(u_pixel_size, 1.0)) * 0.31 + t * 0.12);
+          vec2 streamDir = rotate(vec2(1.0, 0.0), angle);
+          vec2 crossDir = vec2(-streamDir.y, streamDir.x);
+          d = streamDir * (stripe * 0.95 + blocks - 0.5);
+          d += crossDir * waveFn(q.x * bands * 2.5 - t * 3.4 + blocks * 5.0) * 0.45;
+        }
+
+        float microX = waveFn((uv.y * 120.0) + t * 4.0) * complexityValue;
+        float microY = waveCos((uv.x * 110.0) - t * 3.2) * complexityValue;
+        d += vec2(microX, microY) * 0.08;
+
+        return d;
+      }
+
+
+      float regionMask(vec2 uv, float t) {
+        float variation = clamp(u_region_variation, 0.0, 1.0);
+
+        if (u_region_pattern == 1) {
+          float bands = waveFn(uv.y * mix(6.0, 42.0, variation) + t * 0.65);
+          return smoothstep(-0.35, 0.45, bands);
+        }
+
+        if (u_region_pattern == 2) {
+          float bands = waveFn(uv.x * mix(6.0, 42.0, variation) - t * 0.55);
+          return smoothstep(-0.35, 0.45, bands);
+        }
+
+        if (u_region_pattern == 3) {
+          float n = fbm(uv * mix(2.5, 14.0, variation) + vec2(t * 0.08, -t * 0.06));
+          return smoothstep(0.32, 0.78, n);
+        }
+
+        if (u_region_pattern == 4) {
+          vec2 c = uv - 0.5 + vec2(waveFn(t * 0.23), waveCos(t * 0.19)) * 0.12 * variation;
+          float r = length(c);
+          return 1.0 - smoothstep(mix(0.18, 0.55, variation), mix(0.45, 0.85, variation), r);
+        }
+
+        return 1.0;
+      }
+
+      vec2 flowField(vec2 uv, float t) {
+        vec2 primary = flowFieldForMode(uv, t, u_mode, u_scale, u_complexity);
+        if (u_secondary_mode < 0 || u_effect_mix <= 0.0001) return primary;
+
+        float local = regionMask(uv, t) * clamp(u_effect_mix, 0.0, 1.0);
+        vec2 shiftedUv = fract(uv + vec2(0.17, 0.31) * u_region_variation);
+        vec2 secondary = flowFieldForMode(shiftedUv, t * max(u_secondary_speed, 0.001), u_secondary_mode, u_secondary_scale, u_complexity);
+
+        // Blend between the modes, then add a little secondary detail so combinations feel layered rather than merely averaged.
+        return mix(primary, secondary, local) + secondary * local * 0.35;
+      }
+
+      void main() {
+        vec2 uv = v_uv;
+        float t = u_time * u_speed;
+
+        vec2 d = flowField(uv, t) * u_strength;
+
+        // Main displaced sample. Abstract mode can quantize the UVs into flowing pixel blocks.
+        vec2 refractOffset = refractionNormalOffset(uv, t);
+        vec2 riverUv = abstractRiverSampleUv(uv, t);
+        vec2 sampleUv = u_mode == 7
+          ? clamp(riverUv + refractOffset, 0.001, 0.999)
+          : clamp(uv + d + refractOffset, 0.001, 0.999);
+
+        vec4 c = vec4(0.0);
+        if (u_mode == 7) {
+          vec2 splitDir = normalize(vec2(cos(radians(u_river_angle)), sin(radians(u_river_angle))) + vec2(0.0001));
+          vec4 baseSample = texture2D(u_image, sampleUv);
+          vec4 redSample = texture2D(u_image, clamp(sampleUv + splitDir * u_channel_split, 0.001, 0.999));
+          vec4 blueSample = texture2D(u_image, clamp(sampleUv - splitDir * u_channel_split, 0.001, 0.999));
+          c = vec4(redSample.r, baseSample.g, blueSample.b, 1.0);
+          float bandShade = waveFn((rotate(uv - 0.5, radians(u_river_angle)).y * max(u_river_bands, 1.0)) * 6.2831853 + t * 1.4);
+          c.rgb *= 1.0 + bandShade * 0.08 * u_river_sharpness;
+        } else {
+          // Vertical smear / reflection stretch.
+          c += texture2D(u_image, clamp(sampleUv + vec2(0.0, -u_smear * 2.0), 0.001, 0.999)) * 0.12;
+          c += texture2D(u_image, clamp(sampleUv + vec2(0.0, -u_smear), 0.001, 0.999)) * 0.18;
+          c += texture2D(u_image, sampleUv) * 0.40;
+          c += texture2D(u_image, clamp(sampleUv + vec2(0.0, u_smear), 0.001, 0.999)) * 0.18;
+          c += texture2D(u_image, clamp(sampleUv + vec2(0.0, u_smear * 2.0), 0.001, 0.999)) * 0.12;
+        }
+
+        if (u_glass_chroma > 0.0001) {
+            vec2 chromaDir = normalize(d + refractOffset + vec2(0.001, -0.002));
+            vec4 redSample = texture2D(u_image, clamp(sampleUv + chromaDir * u_glass_chroma, 0.001, 0.999));
+            vec4 blueSample = texture2D(u_image, clamp(sampleUv - chromaDir * u_glass_chroma, 0.001, 0.999));
+            c.r = mix(c.r, redSample.r, 0.65);
+          c.b = mix(c.b, blueSample.b, 0.65);
+        }
+
+        // Shimmer from local motion intensity.
+        float shimmer = length(d + refractOffset) * u_shimmer * 80.0;
+        c.rgb += shimmer;
+
+
+        gl_FragColor = vec4(c.rgb, 1.0);
+      }
+    `;
+
+    function createShader(type, source) {
+      const shader = gl.createShader(type);
+      gl.shaderSource(shader, source);
+      gl.compileShader(shader);
+
+      if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+        console.error(gl.getShaderInfoLog(shader));
+        return null;
+      }
+
+      return shader;
+    }
+
+    function createProgram(vertexSource, fragmentSource) {
+      const vertexShader = createShader(gl.VERTEX_SHADER, vertexSource);
+      const fragmentShader = createShader(gl.FRAGMENT_SHADER, fragmentSource);
+
+      const program = gl.createProgram();
+      gl.attachShader(program, vertexShader);
+      gl.attachShader(program, fragmentShader);
+      gl.linkProgram(program);
+
+      if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+        console.error(gl.getProgramInfoLog(program));
+        return null;
+      }
+
+      return program;
+    }
+
+    const program = createProgram(vertexShaderSource, fragmentShaderSource);
+    gl.useProgram(program);
+
+    const locations = {
+      position: gl.getAttribLocation(program, "a_position"),
+      image: gl.getUniformLocation(program, "u_image"),
+      time: gl.getUniformLocation(program, "u_time"),
+      strength: gl.getUniformLocation(program, "u_strength"),
+      speed: gl.getUniformLocation(program, "u_speed"),
+      scale: gl.getUniformLocation(program, "u_scale"),
+      complexity: gl.getUniformLocation(program, "u_complexity"),
+      smear: gl.getUniformLocation(program, "u_smear"),
+      shimmer: gl.getUniformLocation(program, "u_shimmer"),
+      refraction: gl.getUniformLocation(program, "u_refraction"),
+      refractionScale: gl.getUniformLocation(program, "u_refraction_scale"),
+      glassChroma: gl.getUniformLocation(program, "u_glass_chroma"),
+      pixelSize: gl.getUniformLocation(program, "u_pixel_size"),
+      riverAngle: gl.getUniformLocation(program, "u_river_angle"),
+      riverBands: gl.getUniformLocation(program, "u_river_bands"),
+      riverSharpness: gl.getUniformLocation(program, "u_river_sharpness"),
+      pixelDrift: gl.getUniformLocation(program, "u_pixel_drift"),
+      channelSplit: gl.getUniformLocation(program, "u_channel_split"),
+      mode: gl.getUniformLocation(program, "u_mode"),
+      secondaryMode: gl.getUniformLocation(program, "u_secondary_mode"),
+      waveFunction: gl.getUniformLocation(program, "u_wave_function"),
+      regionPattern: gl.getUniformLocation(program, "u_region_pattern"),
+      effectMix: gl.getUniformLocation(program, "u_effect_mix"),
+      regionVariation: gl.getUniformLocation(program, "u_region_variation"),
+      secondaryScale: gl.getUniformLocation(program, "u_secondary_scale"),
+      secondarySpeed: gl.getUniformLocation(program, "u_secondary_speed"),
+      resolution: gl.getUniformLocation(program, "u_resolution")
+    };
+
+    const buffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
+      -1, -1,
+       1, -1,
+      -1,  1,
+      -1,  1,
+       1, -1,
+       1,  1
+    ]), gl.STATIC_DRAW);
+
+    gl.enableVertexAttribArray(locations.position);
+    gl.vertexAttribPointer(locations.position, 2, gl.FLOAT, false, 0, 0);
+
+    const texture = gl.createTexture();
+    gl.activeTexture(gl.TEXTURE0);
+    gl.bindTexture(gl.TEXTURE_2D, texture);
+
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+
+    gl.uniform1i(locations.image, 0);
+
+    const modeMap = {
+      none: -1,
+      water: 0,
+      turbulence: 1,
+      vortex: 2,
+      diagonal: 3,
+      liquid: 4,
+      rings: 5,
+      chaos: 6,
+      abstractRiver: 7
+    };
+
+    const regionPatternMap = {
+      full: 0,
+      horizontal: 1,
+      vertical: 2,
+      patches: 3,
+      radial: 4
+    };
+
+    const waveFunctionMap = {
+      sine: 0,
+      triangle: 1,
+      saw: 2,
+      square: 3,
+      noise: 4
+    };
+
+    let paused = false;
+    let startTime = performance.now();
+    let pausedTime = 0;
+    let loadedImage = false;
+    let sourceWidth = 900;
+    let sourceHeight = 600;
+    let previewWidth = 900;
+    let previewHeight = 600;
+    let videoExporting = false;
+
+    function updateOutputs() {
+      for (const key in outputs) {
+        if (!outputs[key] || !controls[key]) continue;
+        const decimals = ["videoDuration", "videoFps", "exportScale", "pixelSize", "riverAngle", "riverBands"].includes(key) ? 0 : (["scale", "refractionScale", "secondaryScale"].includes(key) ? 1 : 3);
+        outputs[key].value = key === "exportScale"
+          ? `${Number(controls[key].value).toFixed(decimals)}%`
+          : Number(controls[key].value).toFixed(decimals);
+      }
+    }
+
+    function updateConditionalSections() {
+      const abstractSection = document.getElementById("abstractRiverSection");
+      if (!abstractSection) return;
+      const usesAbstractRiver = controls.mode.value === "abstractRiver" || controls.secondaryMode.value === "abstractRiver";
+      abstractSection.classList.toggle("is-visible", usesAbstractRiver);
+    }
+
+    function clampExportDimension(value) {
+      const maxTextureSize = gl.getParameter(gl.MAX_TEXTURE_SIZE) || 8192;
+      const parsed = Math.round(Number(value));
+      if (!Number.isFinite(parsed)) return 1;
+      return Math.min(Math.max(parsed, 1), maxTextureSize);
+    }
+
+    function setExportResolutionFromScale() {
+      const scaleFactor = Math.max(0.01, Number(controls.exportScale.value) / 100);
+      controls.exportWidth.value = clampExportDimension(sourceWidth * scaleFactor);
+      controls.exportHeight.value = clampExportDimension(sourceHeight * scaleFactor);
+      updateOutputs();
+    }
+
+    function syncExportControlsToSource() {
+      controls.exportScale.value = 100;
+      controls.exportWidth.value = clampExportDimension(sourceWidth);
+      controls.exportHeight.value = clampExportDimension(sourceHeight);
+      updateOutputs();
+    }
+
+    function getExportSize() {
+      return {
+        width: clampExportDimension(controls.exportWidth.value),
+        height: clampExportDimension(controls.exportHeight.value)
+      };
+    }
+
+    Object.values(controls).forEach(control => {
+      if (!control) return;
+      control.addEventListener("input", updateOutputs);
+      control.addEventListener("change", updateOutputs);
+    });
+
+    controls.mode.addEventListener("change", updateConditionalSections);
+    controls.secondaryMode.addEventListener("change", updateConditionalSections);
+
+    controls.exportScale.addEventListener("input", setExportResolutionFromScale);
+    controls.exportScale.addEventListener("change", setExportResolutionFromScale);
+    controls.exportWidth.addEventListener("change", () => {
+      controls.exportWidth.value = clampExportDimension(controls.exportWidth.value);
+      updateOutputs();
+    });
+    controls.exportHeight.addEventListener("change", () => {
+      controls.exportHeight.value = clampExportDimension(controls.exportHeight.value);
+      updateOutputs();
+    });
+
+    syncExportControlsToSource();
+    updateConditionalSections();
+
+    function fitCanvasToImage(img) {
+      sourceWidth = img.width;
+      sourceHeight = img.height;
+
+      const maxW = window.innerWidth < 900 ? window.innerWidth - 36 : window.innerWidth - 390;
+      const maxH = window.innerHeight - 36;
+
+      const ratio = Math.min(maxW / img.width, maxH / img.height, 1);
+      previewWidth = Math.max(1, Math.floor(img.width * ratio));
+      previewHeight = Math.max(1, Math.floor(img.height * ratio));
+      canvas.width = previewWidth;
+      canvas.height = previewHeight;
+
+      gl.viewport(0, 0, canvas.width, canvas.height);
+    }
+
+    function loadImage(file) {
+      const img = new Image();
+
+      img.onload = () => {
+        fitCanvasToImage(img);
+
+        gl.bindTexture(gl.TEXTURE_2D, texture);
+        // DOM images load with a top-left origin, while WebGL texture coordinates are bottom-left based.
+        // Flipping on upload keeps the rendered image upright.
+        gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+        gl.texImage2D(
+          gl.TEXTURE_2D,
+          0,
+          gl.RGBA,
+          gl.RGBA,
+          gl.UNSIGNED_BYTE,
+          img
+        );
+
+        loadedImage = true;
+        syncExportControlsToSource();
+        document.getElementById("hud").textContent = `${img.width} × ${img.height} image loaded locally`;
+        upload.value = "";
+      };
+
+      img.onerror = () => {
+        document.getElementById("hud").textContent = "Could not load that image. Try JPG, PNG, or WebP.";
+        upload.value = "";
+      };
+
+      const reader = new FileReader();
+
+      reader.onload = event => {
+        img.src = event.target.result;
+      };
+
+      reader.onerror = () => {
+        document.getElementById("hud").textContent = "Could not read that image locally.";
+        upload.value = "";
+      };
+
+      reader.readAsDataURL(file);
+    }
+
+    function createDefaultTexture() {
+      const size = 512;
+      const data = new Uint8Array(size * size * 4);
+
+      for (let y = 0; y < size; y++) {
+        for (let x = 0; x < size; x++) {
+          const i = (y * size + x) * 4;
+          const stripe = Math.sin(x * 0.08) * 40 + Math.sin(y * 0.05) * 40;
+          data[i] = 20 + stripe;
+          data[i + 1] = 90 + stripe;
+          data[i + 2] = 150 + stripe;
+          data[i + 3] = 255;
+        }
+      }
+
+      sourceWidth = size;
+      sourceHeight = size;
+      previewWidth = 900;
+      previewHeight = 600;
+      canvas.width = previewWidth;
+      canvas.height = previewHeight;
+      gl.viewport(0, 0, canvas.width, canvas.height);
+
+      gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
+      gl.texImage2D(
+        gl.TEXTURE_2D,
+        0,
+        gl.RGBA,
+        size,
+        size,
+        0,
+        gl.RGBA,
+        gl.UNSIGNED_BYTE,
+        data
+      );
+    }
+
+    createDefaultTexture();
+    syncExportControlsToSource();
+
+    const upload = document.getElementById("upload");
+    const dropzone = document.getElementById("dropzone");
+
+    dropzone.addEventListener("click", event => {
+      if (event.target !== upload) {
+        event.preventDefault();
+        upload.click();
+      }
+    });
+
+    upload.addEventListener("click", event => {
+      event.stopPropagation();
+    });
+
+    upload.addEventListener("change", event => {
+      const file = event.target.files[0];
+      if (file) loadImage(file);
+    });
+
+    dropzone.addEventListener("dragover", event => {
+      event.preventDefault();
+      dropzone.classList.add("dragover");
+    });
+
+    dropzone.addEventListener("dragleave", () => {
+      dropzone.classList.remove("dragover");
+    });
+
+    dropzone.addEventListener("drop", event => {
+      event.preventDefault();
+      dropzone.classList.remove("dragover");
+
+      const file = event.dataTransfer.files[0];
+      if (file && file.type.startsWith("image/")) {
+        loadImage(file);
+      }
+    });
+
+    document.getElementById("pauseBtn").addEventListener("click", event => {
+      paused = !paused;
+      event.target.textContent = paused ? "Play" : "Pause";
+
+      if (!paused) {
+        startTime = performance.now() - pausedTime;
+      }
+    });
+
+    document.getElementById("resetBtn").addEventListener("click", () => {
+      startTime = performance.now();
+      pausedTime = 0;
+    });
+
+    function drawFrame(t) {
+      gl.useProgram(program);
+
+      gl.uniform1f(locations.time, t);
+      gl.uniform1f(locations.strength, parseFloat(controls.strength.value));
+      gl.uniform1f(locations.speed, parseFloat(controls.speed.value));
+      gl.uniform1f(locations.scale, parseFloat(controls.scale.value));
+      gl.uniform1f(locations.complexity, parseFloat(controls.complexity.value));
+      gl.uniform1f(locations.smear, parseFloat(controls.smear.value));
+      gl.uniform1f(locations.shimmer, parseFloat(controls.shimmer.value));
+      gl.uniform1f(locations.refraction, parseFloat(controls.refraction.value));
+      gl.uniform1f(locations.refractionScale, parseFloat(controls.refractionScale.value));
+      gl.uniform1f(locations.glassChroma, parseFloat(controls.glassChroma.value));
+      gl.uniform1f(locations.pixelSize, parseFloat(controls.pixelSize.value));
+      gl.uniform1f(locations.riverAngle, parseFloat(controls.riverAngle.value));
+      gl.uniform1f(locations.riverBands, parseFloat(controls.riverBands.value));
+      gl.uniform1f(locations.riverSharpness, parseFloat(controls.riverSharpness.value));
+      gl.uniform1f(locations.pixelDrift, parseFloat(controls.pixelDrift.value));
+      gl.uniform1f(locations.channelSplit, parseFloat(controls.channelSplit.value));
+      gl.uniform1i(locations.mode, modeMap[controls.mode.value]);
+      gl.uniform1i(locations.secondaryMode, modeMap[controls.secondaryMode.value]);
+      gl.uniform1i(locations.waveFunction, waveFunctionMap[controls.waveFunction.value]);
+      gl.uniform1i(locations.regionPattern, regionPatternMap[controls.regionPattern.value]);
+      gl.uniform1f(locations.effectMix, parseFloat(controls.effectMix.value));
+      gl.uniform1f(locations.regionVariation, parseFloat(controls.regionVariation.value));
+      gl.uniform1f(locations.secondaryScale, parseFloat(controls.secondaryScale.value));
+      gl.uniform1f(locations.secondarySpeed, parseFloat(controls.secondarySpeed.value));
+      gl.uniform2f(locations.resolution, canvas.width, canvas.height);
+
+      gl.drawArrays(gl.TRIANGLES, 0, 6);
+    }
+
+    function downloadBlob(blob, filename) {
+      const link = document.createElement("a");
+      const url = URL.createObjectURL(blob);
+      link.download = filename;
+      link.href = url;
+      link.click();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    }
+
+    document.getElementById("exportFullPngBtn").addEventListener("click", () => {
+      const oldWidth = canvas.width;
+      const oldHeight = canvas.height;
+      const t = pausedTime * 0.001;
+      const exportStatus = document.getElementById("exportStatus");
+      const { width, height } = getExportSize();
+
+      canvas.width = width;
+      canvas.height = height;
+      gl.viewport(0, 0, canvas.width, canvas.height);
+      drawFrame(t);
+
+      canvas.toBlob(blob => {
+        if (blob) downloadBlob(blob, `water-distortion-${width}x${height}.png`);
+        canvas.width = oldWidth;
+        canvas.height = oldHeight;
+        gl.viewport(0, 0, canvas.width, canvas.height);
+        drawFrame(t);
+        exportStatus.textContent = `Exported ${width} × ${height} PNG.`;
+      }, "image/png");
+    });
+
+    function canvasBlob(type, quality) {
+      return new Promise(resolve => canvas.toBlob(resolve, type, quality));
+    }
+
+    function asciiBytes(text) {
+      const out = new Uint8Array(text.length);
+      for (let i = 0; i < text.length; i++) out[i] = text.charCodeAt(i) & 255;
+      return out;
+    }
+
+    function concatBytes(parts) {
+      const length = parts.reduce((sum, part) => sum + part.length, 0);
+      const out = new Uint8Array(length);
+      let offset = 0;
+      for (const part of parts) {
+        out.set(part, offset);
+        offset += part.length;
+      }
+      return out;
+    }
+
+    function evenBytes(bytes) {
+      if (bytes.length % 2 === 0) return bytes;
+      const out = new Uint8Array(bytes.length + 1);
+      out.set(bytes, 0);
+      return out;
+    }
+
+    function u16le(value) {
+      const out = new Uint8Array(2);
+      const view = new DataView(out.buffer);
+      view.setUint16(0, value, true);
+      return out;
+    }
+
+    function u32le(value) {
+      const out = new Uint8Array(4);
+      const view = new DataView(out.buffer);
+      view.setUint32(0, value >>> 0, true);
+      return out;
+    }
+
+    function i32le(value) {
+      const out = new Uint8Array(4);
+      const view = new DataView(out.buffer);
+      view.setInt32(0, value | 0, true);
+      return out;
+    }
+
+    function i16le(value) {
+      const out = new Uint8Array(2);
+      const view = new DataView(out.buffer);
+      view.setInt16(0, value, true);
+      return out;
+    }
+
+    function chunk(fourcc, data) {
+      return concatBytes([asciiBytes(fourcc), u32le(data.length), evenBytes(data)]);
+    }
+
+    function list(type, children) {
+      const data = concatBytes([asciiBytes(type), ...children]);
+      return concatBytes([asciiBytes("LIST"), u32le(data.length), evenBytes(data)]);
+    }
+
+    function riff(type, children) {
+      const data = concatBytes([asciiBytes(type), ...children]);
+      return concatBytes([asciiBytes("RIFF"), u32le(data.length), evenBytes(data)]);
+    }
+
+    function makeAvih({ width, height, fps, frameCount, maxFrameSize }) {
+      const b = new Uint8Array(56);
+      const v = new DataView(b.buffer);
+      v.setUint32(0, Math.round(1000000 / fps), true); // dwMicroSecPerFrame
+      v.setUint32(4, Math.max(1, maxFrameSize * fps), true); // dwMaxBytesPerSec
+      v.setUint32(8, 0, true); // dwPaddingGranularity
+      v.setUint32(12, 0x10, true); // AVIF_HASINDEX
+      v.setUint32(16, frameCount, true);
+      v.setUint32(20, 0, true);
+      v.setUint32(24, 1, true);
+      v.setUint32(28, maxFrameSize, true);
+      v.setUint32(32, width, true);
+      v.setUint32(36, height, true);
+      return b;
+    }
+
+    function makeStrh({ width, height, fps, frameCount, maxFrameSize }) {
+      return concatBytes([
+        asciiBytes("vids"),
+        asciiBytes("MJPG"),
+        u32le(0),
+        u16le(0),
+        u16le(0),
+        u32le(0),
+        u32le(1),
+        u32le(fps),
+        u32le(0),
+        u32le(frameCount),
+        u32le(maxFrameSize),
+        u32le(0xffffffff),
+        u32le(0),
+        i16le(0),
+        i16le(0),
+        i16le(Math.min(width, 32767)),
+        i16le(Math.min(height, 32767))
+      ]);
+    }
+
+    function makeStrf({ width, height, maxFrameSize }) {
+      const b = new Uint8Array(40);
+      const v = new DataView(b.buffer);
+      v.setUint32(0, 40, true);
+      v.setInt32(4, width, true);
+      v.setInt32(8, height, true);
+      v.setUint16(12, 1, true);
+      v.setUint16(14, 24, true);
+      b.set(asciiBytes("MJPG"), 16);
+      v.setUint32(20, maxFrameSize, true);
+      v.setInt32(24, 0, true);
+      v.setInt32(28, 0, true);
+      v.setUint32(32, 0, true);
+      v.setUint32(36, 0, true);
+      return b;
+    }
+
+    function makeIdxEntry({ offset, size }) {
+      return concatBytes([
+        asciiBytes("00dc"),
+        u32le(0x10),
+        u32le(offset),
+        u32le(size)
+      ]);
+    }
+
+    async function buildAviFromCurrentSettings({ seconds, fps, width, height, status }) {
+      const frameCount = Math.max(1, Math.round(seconds * fps));
+      const jpegFrames = [];
+      let maxFrameSize = 0;
+
+      for (let frame = 0; frame < frameCount; frame++) {
+        const t = pausedTime * 0.001 + frame / fps;
+        drawFrame(t);
+
+        const blob = await canvasBlob("image/jpeg", 0.92);
+        if (!blob) throw new Error("Canvas JPEG encoding failed.");
+        const bytes = new Uint8Array(await blob.arrayBuffer());
+        jpegFrames.push(bytes);
+        maxFrameSize = Math.max(maxFrameSize, bytes.length);
+
+        status.textContent = `Rendering frame ${frame + 1} of ${frameCount} at ${width} × ${height} (${fps} FPS)...`;
+        await new Promise(resolve => setTimeout(resolve, 0));
+      }
+
+      const moviChildren = [];
+      const idxEntries = [];
+      let moviOffset = 4; // idx1 offsets are relative to the start of the movi list data, including the "movi" tag.
+
+      for (const bytes of jpegFrames) {
+        moviChildren.push(chunk("00dc", bytes));
+        idxEntries.push(makeIdxEntry({ offset: moviOffset, size: bytes.length }));
+        moviOffset += 8 + evenBytes(bytes).length;
+      }
+
+      const hdrl = list("hdrl", [
+        chunk("avih", makeAvih({ width, height, fps, frameCount, maxFrameSize })),
+        list("strl", [
+          chunk("strh", makeStrh({ width, height, fps, frameCount, maxFrameSize })),
+          chunk("strf", makeStrf({ width, height, maxFrameSize }))
+        ])
+      ]);
+
+      const movi = list("movi", moviChildren);
+      const idx1 = chunk("idx1", concatBytes(idxEntries));
+
+      return new Blob([riff("AVI ", [hdrl, movi, idx1])], { type: "video/x-msvideo" });
+    }
+
+    document.getElementById("exportVideoBtn").addEventListener("click", async () => {
+      const exportStatus = document.getElementById("exportStatus");
+      const button = document.getElementById("exportVideoBtn");
+      if (button.disabled) return;
+
+      const oldWidth = canvas.width;
+      const oldHeight = canvas.height;
+      const seconds = Math.max(1, parseInt(controls.videoDuration.value, 10) || 1);
+      const fps = Math.max(1, parseInt(controls.videoFps.value, 10) || 24);
+      const { width, height } = getExportSize();
+
+      function restoreAfterVideo(message) {
+        videoExporting = false;
+        canvas.width = oldWidth;
+        canvas.height = oldHeight;
+        gl.viewport(0, 0, canvas.width, canvas.height);
+        drawFrame(pausedTime * 0.001);
+        button.disabled = false;
+        button.textContent = "Video";
+        if (message) exportStatus.textContent = message;
+      }
+
+      try {
+        videoExporting = true;
+        button.disabled = true;
+        button.textContent = "Rendering...";
+        exportStatus.textContent = `Rendering ${seconds}s frame-by-frame AVI at ${width} × ${height}, ${fps} FPS...`;
+
+        canvas.width = width;
+        canvas.height = height;
+        gl.viewport(0, 0, canvas.width, canvas.height);
+
+        const blob = await buildAviFromCurrentSettings({ seconds, fps, width, height, status: exportStatus });
+        downloadBlob(blob, `water-distortion-${width}x${height}-video.avi`);
+        restoreAfterVideo(`Exported ${seconds}s AVI video at ${width} × ${height}, ${fps} FPS.`);
+      } catch (error) {
+        console.error(error);
+        restoreAfterVideo("Could not export the frame-stitched AVI. Try a shorter duration, lower FPS, or a smaller output resolution.");
+      }
+    });
+
+    document.getElementById("preset").addEventListener("change", event => {
+      const presets = {
+        harbor: {
+          mode: "water",
+          waveFunction: "sine",
+          strength: 0.035,
+          speed: 1.1,
+          scale: 28,
+          complexity: 0.42,
+          smear: 0.014,
+          shimmer: 0.014
+        },
+        storm: {
+          mode: "chaos",
+          waveFunction: "noise",
+          strength: 0.075,
+          speed: 2.4,
+          scale: 45,
+          complexity: 0.88,
+          smear: 0.012,
+          shimmer: 0.04
+        },
+        glass: {
+          mode: "liquid",
+          waveFunction: "sine",
+          strength: 0.045,
+          speed: 0.65,
+          scale: 14,
+          complexity: 0.28,
+          smear: 0.004,
+          shimmer: 0.025
+        },
+        jar: {
+          mode: "liquid",
+          waveFunction: "triangle",
+          strength: 0.065,
+          speed: 0.55,
+          scale: 11,
+          complexity: 0.22,
+          smear: 0.002,
+          shimmer: 0.018,
+          refraction: 0.075,
+          refractionScale: 9,
+          glassChroma: 0.018
+        },
+        spiral: {
+          mode: "vortex",
+          waveFunction: "sine",
+          strength: 0.055,
+          speed: 0.7,
+          scale: 22,
+          complexity: 0.36,
+          smear: 0.007,
+          shimmer: 0.016
+        },
+        abstract: {
+          mode: "abstractRiver",
+          waveFunction: "noise",
+          strength: 0.075,
+          speed: 1.8,
+          scale: 34,
+          complexity: 0.85,
+          smear: 0.006,
+          shimmer: 0.032,
+          pixelSize: 18,
+          riverAngle: -18,
+          riverBands: 28,
+          riverSharpness: 0.72,
+          pixelDrift: 0.82,
+          channelSplit: 0.006
+        }
+      };
+
+      const preset = presets[event.target.value];
+      if (!preset) return;
+
+      const neutralMix = {
+        secondaryMode: "none",
+        regionPattern: "full",
+        effectMix: 0,
+        regionVariation: 0.35,
+        secondaryScale: 36,
+        secondarySpeed: 1.6
+      };
+      for (const key in neutralMix) {
+        controls[key].value = neutralMix[key];
+      }
+
+      const neutralRefraction = {
+        refraction: 0.018,
+        refractionScale: 18,
+        glassChroma: 0.004
+      };
+      for (const key in neutralRefraction) {
+        controls[key].value = neutralRefraction[key];
+      }
+
+      const neutralAbstractRiver = {
+        pixelSize: 18,
+        riverAngle: -18,
+        riverBands: 24,
+        riverSharpness: 0.65,
+        pixelDrift: 0.75,
+        channelSplit: 0.006
+      };
+      for (const key in neutralAbstractRiver) {
+        controls[key].value = neutralAbstractRiver[key];
+      }
+
+      for (const key in preset) {
+        controls[key].value = preset[key];
+      }
+
+      updateOutputs();
+      updateConditionalSections();
+    });
+
+    window.addEventListener("resize", () => {
+      gl.viewport(0, 0, canvas.width, canvas.height);
+    });
+
+    function render(now) {
+      if (!paused) {
+        pausedTime = now - startTime;
+      }
+
+      if (!videoExporting) {
+        drawFrame(pausedTime * 0.001);
+      }
+
+      requestAnimationFrame(render);
+    }
+
+    requestAnimationFrame(render);
+  </script>
+</body>
+</html>
