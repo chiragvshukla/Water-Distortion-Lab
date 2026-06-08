@@ -20,4 +20,4 @@ Rendering happens completely locally, so don't worry about your images being col
 Please keep in mind that higher resolution images will require more time to process and also lead to bigger files overall, especially for video.
 
 ## Roadmap
-This is very much meant to be a one-time project, so I won't be actively maintaining this repository. That said, I have some cool ideas for the future in a similar direction, so maybe I will release new versions and added features down the line if I have the time. 
+This is very much meant to be a one-time project and I kinda suck at HTML(you can notice how lazy I was in the code), so I won't be actively maintaining this repository. That said, I have some cool ideas for the future in a similar direction, so maybe I will release new versions and added features down the line if I have the time. 
