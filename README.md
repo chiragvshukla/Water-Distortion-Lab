@@ -1,8 +1,7 @@
 # Water Distortion Lab
 
 I came across a very cool photographer called [Oliver Palm](https://www.oliverpalmphoto.com/) who makes distorted photos using water, an iPad, and their camera. That got me thinking whether there was a way to simulate the water distortions rather than have to deal with the real thing. The usual way to do this would be to use Blender's simulations, OpenGL, or TouchDesigner. That said, I personally thought that this might be overkill and requires a decent bit of knowledge of the respective programs. Here's my attempt at a very simplified version of warping the images that's more noob user-friendly. It's nowhere near the quality of Oliver Palm's photos (and I wouldn't dare to take that from them), but hey, there's still some very cool effects you can get out of it. 
-Here's an example:
-https://github.com/user-attachments/assets/f9681715-4dba-4f90-b58a-e40f53f747f3
+Here's an [example.](https://github.com/user-attachments/assets/f9681715-4dba-4f90-b58a-e40f53f747f3)
 
 ## Usage
 
